@@ -1,27 +1,29 @@
-const express = require('express');
-const knex = require('knex');
-const knexConfig = require('./knexfile');
+require("dotenv").config();
+const express = require("express");
+var bodyParser = require("body-parser");
+var cors = require("cors");
 
-const app = express();
-const port =  3000;
+//Routes
+var user = require("./src/apis/user");
 
-// Sample route to fetch data from the database
-app.get('/data', (req, res) => {
-  const db = knex(knexConfig.development);
-  db.select('*').from('tbl_users').then((results) => {
-    var response = [];
-      response.push({'responseCode' : 1, 'message' : 'User Data', 'data': results});
-      res.setHeader('Content-Type', 'application/json');
-      res.status(200).send(JSON.stringify(response));
+var apiRoutes = express.Router();
+apiRoutes.use(bodyParser.urlencoded({ extended: true }));
+apiRoutes.use(bodyParser.json());
+var app = express();
+app.use(cors());
+app.use(bodyParser.json()); //	to support JSON-encoded bodies
+app.use(
+  bodyParser.urlencoded({
+    //	to support URL-encoded bodies
+    extended: true,
   })
-  .catch(err => {
-    res.status(400).send(err);
-  })
-  .finally(() => {
-    db.destroy();
-  });
+);
+
+app.listen(process.env.SERVER_PORT, () => {
+  console.log(
+    `Server is running at http://localhost:${process.env.SERVER_PORT}`
+  );
 });
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
-});
+app.post("/login", user.simpleLogin);
+app.post("/signup", user.simpleSignUp);
